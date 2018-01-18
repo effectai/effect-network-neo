@@ -1,4 +1,4 @@
-package ai.effect.token.EffectToken;
+package ai.effect.token;
 
 import java.math.BigInteger;
 import java.util.Arrays;
