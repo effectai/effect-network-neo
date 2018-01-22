@@ -91,6 +91,9 @@ public class EffectToken extends SmartContract
     	if (value.compareTo(BigInteger.ZERO) < 0) return "negative value";
 
 	byte[] allowanceKey = Helper.concat(from, to);
+	
+	if (allowanceKey.length != 40) return false;
+	
 	BigInteger allowanceValue = getBalance(allowanceKey);
 
     	if (allowanceValue.compareTo(value) < 0) return "insufficient allowance";
@@ -133,6 +136,8 @@ public class EffectToken extends SmartContract
     	if (ownerValue.compareTo(value) < 0) return "no balance";
 
 	byte[] approvalKey = Helper.concat(owner, spender);
+	
+	if (approvalKey.length != 40) return false;
 
     	Storage.put(Storage.currentContext(), approvalKey, value);
 
@@ -146,6 +151,9 @@ public class EffectToken extends SmartContract
      */
     public static BigInteger allowance(byte[] owner, byte[] spender) {
 	byte[] allowanceKey = Helper.concat(owner, spender);
+	
+	if (allowanceKey.length != 40) return false;
+	
 	return getBalance(allowanceKey);
     }
 
