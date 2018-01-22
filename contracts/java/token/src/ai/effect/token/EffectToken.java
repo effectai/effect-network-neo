@@ -152,8 +152,6 @@ public class EffectToken extends SmartContract
     public static BigInteger allowance(byte[] owner, byte[] spender) {
 	byte[] allowanceKey = Helper.concat(owner, spender);
 	
-	if (allowanceKey.length != 40) return false;
-	
 	return getBalance(allowanceKey);
     }
 
