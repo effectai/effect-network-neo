@@ -63,7 +63,7 @@ public class EffectToken extends SmartContract
      * match `caller`.
      */
     public static boolean transfer(byte[] from, byte[] to, BigInteger value, byte[] caller) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return false;
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
 	if (!checkWitness(from, caller)) return false;
 
 	BigInteger fromValue = getBalance(from);
@@ -88,7 +88,7 @@ public class EffectToken extends SmartContract
      * Transfer tokens on behalf of `from` to `to`, requires allowance
      */
     public static boolean transferFrom(byte[] from, byte[] to, BigInteger value) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return false;
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
 
 	byte[] allowanceKey = Helper.concat(from, to);
 	BigInteger allowanceValue = getBalance(allowanceKey);
@@ -125,7 +125,7 @@ public class EffectToken extends SmartContract
      * This overwrites the any value
      */
     public static boolean approve(byte[] owner, byte[] spender, BigInteger value, byte[] caller) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return false;
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
     	if (!checkWitness(owner, caller)) return false;
 
     	BigInteger ownerValue = getBalance(owner);
