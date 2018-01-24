@@ -25,7 +25,7 @@ public class EffectToken extends SmartContract
      * Get the owner of the contract
      */
     public static byte[] getOwner() {
-    	byte[] owner = {63, (byte) 201, 42, (byte) 180, 78, (byte) 141, 109, (byte) 223, (byte) 136, (byte) 187, (byte) 159, (byte) 170, 84, (byte) 129, (byte) 244, 77, (byte) 121, (byte) 127, 53, 88};
+    	byte[] owner = {(byte) 177, 6, 60,(byte)  194,(byte)  249,(byte)  203, 3, 47, 76,(byte)  201, 11,(byte)  213,(byte)  156,(byte)  131, 7,(byte)  197,(byte)  180,(byte)  182,(byte)  147, 37};
     	return owner;
     }
 
@@ -62,13 +62,13 @@ public class EffectToken extends SmartContract
      * From can be a smart contract script hash, in which case it must
      * match `caller`.
      */
-    public static Object transfer(byte[] from, byte[] to, BigInteger value, byte[] caller) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return "negative value";
-	if (!checkWitness(from, caller)) return "incorrect permission";
+    public static boolean transfer(byte[] from, byte[] to, BigInteger value, byte[] caller) {
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+	if (!checkWitness(from, caller)) return false;
 
 	BigInteger fromValue = getBalance(from);
 
-    	if (fromValue.compareTo(value) < 0) return "no balance";
+    	if (fromValue.compareTo(value) < 0) return false;
 
     	if (fromValue.equals(value)) {
     	    Storage.delete(Storage.currentContext(), from);
@@ -87,8 +87,8 @@ public class EffectToken extends SmartContract
     /**
      * Transfer tokens on behalf of `from` to `to`, requires allowance
      */
-    public static Object transferFrom(byte[] from, byte[] to, BigInteger value) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return "negative value";
+    public static boolean transferFrom(byte[] from, byte[] to, BigInteger value) {
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
 
 	byte[] allowanceKey = Helper.concat(from, to);
 	
@@ -96,11 +96,11 @@ public class EffectToken extends SmartContract
 	
 	BigInteger allowanceValue = getBalance(allowanceKey);
 
-    	if (allowanceValue.compareTo(value) < 0) return "insufficient allowance";
+    	if (allowanceValue.compareTo(value) < 0) return false;
 
 	BigInteger fromValue = getBalance(from);
 
-    	if (fromValue.compareTo(value) < 0) return "no balance";
+    	if (fromValue.compareTo(value) < 0) return false;
 
     	if (fromValue.equals(value)) {
     	    Storage.delete(Storage.currentContext(), from);
@@ -127,13 +127,13 @@ public class EffectToken extends SmartContract
      *
      * This overwrites the any value
      */
-    public static Object approve(byte[] owner, byte[] spender, BigInteger value, byte[] caller) {
-    	if (value.compareTo(BigInteger.ZERO) < 0) return "negative value";
-    	if (!checkWitness(owner, caller)) return "incorrect permission";
+    public static boolean approve(byte[] owner, byte[] spender, BigInteger value, byte[] caller) {
+    	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+    	if (!checkWitness(owner, caller)) return false;
 
     	BigInteger ownerValue = getBalance(owner);
 
-    	if (ownerValue.compareTo(value) < 0) return "no balance";
+    	if (ownerValue.compareTo(value) < 0) return false;
 
 	byte[] approvalKey = Helper.concat(owner, spender);
 	
@@ -232,5 +232,4 @@ public class EffectToken extends SmartContract
 
     	return RET_NO_OP;
     }
-
 }
