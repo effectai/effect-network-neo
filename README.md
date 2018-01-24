@@ -34,5 +34,6 @@ get the resulting `avm` file.
 
 The following contracts are included:
 
-- [EffectToken.java](contracts/java/token)
+- [EffectToken](contracts/java/token)
+- [TokenLock](contracts/java/token-lock)
 
