@@ -15,7 +15,7 @@ import org.neo.smartcontract.framework.services.system.ExecutionEngine;
 public class TokenLock extends SmartContract
 {
     /* Address of the Effect Token contract */
-    public static final String TOKEN_SCRIPT_HASH = "125db1c28570180fd3e2fe5164e43f2c692ed411";
+    public static final String TOKEN_SCRIPT_HASH = "22285f37342e5b917be3548089d5096d7299335b";
 
     public static final String RET_NO_OP = "no op";
 
@@ -35,7 +35,6 @@ public class TokenLock extends SmartContract
      * Get the number of tokens locked for `address` at `height`
      */
     public static BigInteger getLockedBalance(byte[] address, BigInteger height) {
-	if (address.length != 20) return "invalid address";
 	byte[] lockKey = Helper.concat(address, height.toByteArray());
 	return new BigInteger(Storage.get(Storage.currentContext(), lockKey));
     }
