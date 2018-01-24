@@ -64,6 +64,7 @@ public class EffectToken extends SmartContract
      */
     public static boolean transfer(byte[] from, byte[] to, BigInteger value, byte[] caller) {
     	if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+	if (to.length != 20) return false;
 	if (!checkWitness(from, caller)) return false;
 
 	BigInteger fromValue = getBalance(from);
