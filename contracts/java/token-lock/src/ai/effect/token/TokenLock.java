@@ -51,15 +51,13 @@ public class TokenLock extends SmartContract
      * Send `amount` of tokens to an address that are locked until `height`
      */
     public static Object lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
-	if (value.compareTo(BigInteger.ZERO) < 0) return "amount not positive";
-
+	if (value.compareTo(BigInteger.ZERO) <= 0) return "amount not positive";
+	if (to.length != 20) return "invalid address";
 	if (lockHeight.intValue() <= Blockchain.height()) return "already unlocked";
 
 	byte[] lockAddress = getAddress();
 	boolean transferred = (boolean) token("transfer", new Object[] {from, lockAddress, value});
 	if (transferred == false) return "transfer failed";
-
-	if (to.length != 20) return "invalid address";
 
 	byte[] lockKey = Helper.concat(to, lockHeight.toByteArray());
 	BigInteger lockValue = new BigInteger(Storage.get(Storage.currentContext(), lockKey));
