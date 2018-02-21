@@ -12,13 +12,14 @@ import org.neo.smartcontract.framework.services.neo.TriggerType;
 import org.neo.smartcontract.framework.services.neo.Blockchain;
 import org.neo.smartcontract.framework.services.system.ExecutionEngine;
 
-public class TokenLock extends SmartContract {
+public class TokenLock extends SmartContract
+{
     /* Address of the Effect Token contract */
     public static final String TOKEN_SCRIPT_HASH = "22285f37342e5b917be3548089d5096d7299335b";
 
     public static final String RET_NO_OP = "no op";
 
-    @Appcall(value = TOKEN_SCRIPT_HASH)
+    @Appcall(value=TOKEN_SCRIPT_HASH)
     public static Object token(String arg, Object[] args) {
         return null;
     }
@@ -27,7 +28,7 @@ public class TokenLock extends SmartContract {
      * Get the total number of locked tokens
      */
     public static BigInteger getTotalLocked() {
-        return (BigInteger) token("balanceOf", new Object[]{getAddress()});
+        return (BigInteger) token("balanceOf", new Object[] {getAddress()});
     }
 
     /**
@@ -52,11 +53,10 @@ public class TokenLock extends SmartContract {
     public static Object lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return "amount not positive";
         if (to.length != 20) return "invalid address";
-        if (lockHeight.intValue() <= Blockchain.height())
-            return "already unlocked";
+        if (lockHeight.intValue() <= Blockchain.height()) return "already unlocked";
 
         byte[] lockAddress = getAddress();
-        boolean transferred = (boolean) token("transfer", new Object[]{from, lockAddress, value});
+        boolean transferred = (boolean) token("transfer", new Object[] {from, lockAddress, value});
         if (transferred == false) return "transfer failed";
 
         byte[] lockKey = Helper.concat(to, lockHeight.toByteArray());
@@ -80,7 +80,7 @@ public class TokenLock extends SmartContract {
         if (value.equals(BigInteger.ZERO)) return "no balance";
 
         byte[] lockAddress = getAddress();
-        boolean transferred = (boolean) token("transfer", new Object[]{lockAddress, to, value});
+        boolean transferred = (boolean) token("transfer", new Object[] {lockAddress, to, value});
         if (transferred == false) return "transfer failed";
 
         Storage.delete(Storage.currentContext(), lockKey);

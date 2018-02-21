@@ -9,7 +9,8 @@ import org.neo.smartcontract.framework.services.neo.Storage;
 import org.neo.smartcontract.framework.services.neo.Runtime;
 import org.neo.smartcontract.framework.services.system.ExecutionEngine;
 
-public class EffectToken extends SmartContract {
+public class EffectToken extends SmartContract
+{
     public static final String NAME = "Effect";
     public static final String SYMBOL = "TBA";
 
@@ -24,7 +25,7 @@ public class EffectToken extends SmartContract {
      * Get the owner of the contract
      */
     public static byte[] getOwner() {
-        byte[] owner = {(byte) 177, 6, 60, (byte) 194, (byte) 249, (byte) 203, 3, 47, 76, (byte) 201, 11, (byte) 213, (byte) 156, (byte) 131, 7, (byte) 197, (byte) 180, (byte) 182, (byte) 147, 37};
+        byte[] owner = {(byte) 177, 6, 60,(byte)  194,(byte)  249,(byte)  203, 3, 47, 76,(byte)  201, 11,(byte)  213,(byte)  156,(byte)  131, 7,(byte)  197,(byte)  180,(byte)  182,(byte)  147, 37};
         return owner;
     }
 
@@ -57,7 +58,7 @@ public class EffectToken extends SmartContract {
 
     /**
      * Transfer tokens from `from` to `to`
-     * <p>
+     *
      * From can be a smart contract script hash, in which case it must
      * match `caller`.
      */
@@ -124,7 +125,7 @@ public class EffectToken extends SmartContract {
 
     /**
      * Set the amount that `spender` can send on behalf of `owner` to `value`
-     * <p>
+     *
      * This overwrites the any value
      */
     public static boolean approve(byte[] owner, byte[] spender, BigInteger value, byte[] caller) {
@@ -156,7 +157,7 @@ public class EffectToken extends SmartContract {
 
     /**
      * Deploy smart contract
-     * <p>
+     *
      * Assign all tokens to the owner, can only be called once.
      */
     public static boolean deploy() {
