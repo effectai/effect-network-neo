@@ -115,7 +115,7 @@ public class EffectToken extends SmartContract
         if (allowanceValue.equals(value)) {
             Storage.delete(Storage.currentContext(), allowanceKey);
         } else {
-            Storage.put(Storage.currentContext(), from, allowanceValue.subtract(value));
+            Storage.put(Storage.currentContext(), allowanceKey, allowanceValue.subtract(value));
         }
 
         Runtime.notify("transfer", from, to, value);
