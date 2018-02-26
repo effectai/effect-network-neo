@@ -50,42 +50,43 @@ public class TokenLock extends SmartContract
     /**
      * Send `amount` of tokens to an address that are locked until `height`
      */
-    public static Object lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
-        if (value.compareTo(BigInteger.ZERO) <= 0) return "amount not positive";
-        if (to.length != 20) return "invalid address";
-        if (lockHeight.intValue() <= Blockchain.height()) return "already unlocked";
+    public static boolean lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
+        if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+        if (to.length != 20) return false;
+        if (lockHeight.intValue() <= Blockchain.height()) return false;
 
         byte[] lockAddress = getAddress();
         boolean transferred = (boolean) token("transfer", new Object[] {from, lockAddress, value});
-        if (transferred == false) return "transfer failed";
+        if (transferred == false) return false;
 
         byte[] lockKey = Helper.concat(to, lockHeight.toByteArray());
         BigInteger lockValue = new BigInteger(Storage.get(Storage.currentContext(), lockKey));
 
         Storage.put(Storage.currentContext(), lockKey, lockValue.add(value));
 
-        return "success";
+        return true;
     }
 
     /**
      * Unlock all tokens locked for `to` at `height`
      */
-    public static Object unlock(byte[] to, BigInteger height) {
-        if (height.intValue() > Blockchain.height()) return "still locked";
+    public static boolean unlock(byte[] to, BigInteger height) {
 
-        if (to.length != 20) return "invalid address";
+        if (height.intValue() > Blockchain.height()) return false;
+
+        if (to.length != 20) return false;
 
         byte[] lockKey = Helper.concat(to, height.toByteArray());
         BigInteger value = new BigInteger(Storage.get(Storage.currentContext(), lockKey));
-        if (value.equals(BigInteger.ZERO)) return "no balance";
+        if (value.equals(BigInteger.ZERO)) return false;
 
         byte[] lockAddress = getAddress();
         boolean transferred = (boolean) token("transfer", new Object[] {lockAddress, to, value});
-        if (transferred == false) return "transfer failed";
+        if (transferred == false) return false;
 
         Storage.delete(Storage.currentContext(), lockKey);
 
-        return "success";
+        return true;
     }
 
     /**
