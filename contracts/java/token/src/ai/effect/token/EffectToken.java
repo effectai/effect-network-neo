@@ -88,8 +88,9 @@ public class EffectToken extends SmartContract
     /**
      * Transfer tokens on behalf of `from` to `to`, requires allowance
      */
-    public static boolean transferFrom(byte[] from, byte[] to, BigInteger value) {
+    public static boolean transferFrom(byte[] originator, byte[] from, byte[] to, BigInteger value, byte[] caller) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+        if (!checkWitness(originator, caller)) return false;
 
         byte[] allowanceKey = Helper.concat(from, to);
 
@@ -202,13 +203,15 @@ public class EffectToken extends SmartContract
         }
 
         if (operation == "transferFrom") {
-            if (args.length != 3) return ARG_ERROR;
+            if (args.length != 4) return ARG_ERROR;
 
-            byte[] from = (byte[]) args[0];
-            byte[] to = (byte[]) args[1];
-            BigInteger amount = (BigInteger) args[2];
+            byte[] originator = (byte[]) args[0];
+            byte[] from = (byte[]) args[1];
+            byte[] to = (byte[]) args[2];
+            BigInteger amount = (BigInteger) args[3];
+            byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
 
-            return transferFrom(from, to, amount);
+            return transferFrom(originator, from, to, amount, caller);
         }
 
         if (operation == "approve") {
