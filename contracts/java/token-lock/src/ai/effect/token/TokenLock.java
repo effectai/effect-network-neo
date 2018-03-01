@@ -35,6 +35,8 @@ public class TokenLock extends SmartContract
      * Get the number of tokens locked for `address` at `height`
      */
     public static BigInteger getLockedBalance(byte[] address, BigInteger height) {
+        if (address.length != 20) return null;
+
         byte[] lockKey = Helper.concat(address, height.toByteArray());
         return new BigInteger(Storage.get(Storage.currentContext(), lockKey));
     }

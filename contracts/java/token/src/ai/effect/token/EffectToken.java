@@ -151,6 +151,9 @@ public class EffectToken extends SmartContract
      * Get the amount that `spender` can send on behalf of `owner`
      */
     public static BigInteger allowance(byte[] owner, byte[] spender) {
+        if (owner.length != 20) return null;
+        if (spender.length != 20) return null;
+
         byte[] allowanceKey = Helper.concat(owner, spender);
         return getBalance(allowanceKey);
     }
