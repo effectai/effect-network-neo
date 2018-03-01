@@ -18,6 +18,7 @@ public class TokenLock extends SmartContract
     public static final String TOKEN_SCRIPT_HASH = "22285f37342e5b917be3548089d5096d7299335b";
 
     public static final String RET_NO_OP = "no op";
+    public static final String ARG_ERROR = "arguments invalid";
 
     @Appcall(value=TOKEN_SCRIPT_HASH)
     public static Object token(String arg, Object[] args) {
@@ -98,12 +99,16 @@ public class TokenLock extends SmartContract
         if (operation == "totalLocked") return getTotalLocked();
 
         if (operation == "lockedBalanceAt") {
+            if (args.length != 2) return ARG_ERROR;
+
             byte[] address = (byte[]) args[0];
             BigInteger height = (BigInteger) args[1];
             return getLockedBalance(address, height);
         }
 
         if (operation == "lock") {
+            if (args.length != 4) return ARG_ERROR;
+
             byte[] from = (byte[]) args[0];
             byte[] to = (byte[]) args[1];
             BigInteger amount = (BigInteger) args[2];
@@ -113,6 +118,8 @@ public class TokenLock extends SmartContract
         }
 
         if (operation == "unlock") {
+            if (args.length != 2) return ARG_ERROR;
+
             byte[] to = (byte[]) args[0];
             BigInteger height = (BigInteger) args[1];
             return unlock(to, height);
