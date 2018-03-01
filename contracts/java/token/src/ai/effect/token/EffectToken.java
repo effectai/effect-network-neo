@@ -92,7 +92,7 @@ public class EffectToken extends SmartContract
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
         if (!checkWitness(originator, caller)) return false;
 
-        byte[] allowanceKey = Helper.concat(from, to);
+        byte[] allowanceKey = Helper.concat(from, originator);
 
         if (allowanceKey.length != 40) return false;
 
