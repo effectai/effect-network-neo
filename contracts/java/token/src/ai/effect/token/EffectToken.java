@@ -33,7 +33,7 @@ public class EffectToken extends SmartContract
      * Get the total token supply
      */
     public static BigInteger totalSupply() {
-        return BigInteger.valueOf(NUM_TOKENS).multiply(BigInteger.valueOf(FACTOR));
+        return BigInteger.valueOf(NUM_TOKENS * FACTOR);
     }
 
     /**
