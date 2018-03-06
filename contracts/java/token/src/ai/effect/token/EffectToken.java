@@ -11,8 +11,8 @@ import org.neo.smartcontract.framework.services.system.ExecutionEngine;
 
 public class EffectToken extends SmartContract
 {
-    public static final String NAME = "Effect";
-    public static final String SYMBOL = "TBA";
+    public static final String NAME = "Effect.AI Token";
+    public static final String SYMBOL = "EFX";
 
     public static final byte DECIMALS = 8;
     public static final long NUM_TOKENS = 650000000;   // total number of tokens
