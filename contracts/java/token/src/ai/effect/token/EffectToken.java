@@ -69,7 +69,7 @@ public class EffectToken extends SmartContract
 
         BigInteger fromValue = getBalance(from);
 
-        if (fromValue.compareTo(value) < 0) return false;
+        if (fromValue.compareTo(value) <= 0) return false;
 
         if (fromValue.equals(value)) {
             Storage.delete(Storage.currentContext(), from);
@@ -135,7 +135,7 @@ public class EffectToken extends SmartContract
 
         BigInteger ownerValue = getBalance(owner);
 
-        if (ownerValue.compareTo(value) < 0) return false;
+        if (ownerValue.compareTo(value) <= 0) return false;
 
         byte[] approvalKey = Helper.concat(owner, spender);
 
