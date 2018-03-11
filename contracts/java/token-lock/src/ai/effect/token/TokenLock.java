@@ -96,36 +96,42 @@ public class TokenLock extends SmartContract
      * Smart contract entrypoint
      */
     public static Object Main(String operation, Object[] args) {
-        if (operation == "address") return getAddress();
-        if (operation == "totalLocked") return getTotalLocked();
+        if (Runtime.trigger() == TriggerType.Verification) {
+            return true;
+        } else if (Runtime.trigger() == TriggerType.Application) {
+            if (operation == "address") return getAddress();
+            if (operation == "totalLocked") return getTotalLocked();
 
-        if (operation == "lockedBalanceAt") {
-            if (args.length != 2) return ARG_ERROR;
+            if (operation == "lockedBalanceAt") {
+                if (args.length != 2) return ARG_ERROR;
 
-            byte[] address = (byte[]) args[0];
-            BigInteger height = (BigInteger) args[1];
-            return getLockedBalance(address, height);
+                byte[] address = (byte[]) args[0];
+                BigInteger height = (BigInteger) args[1];
+                return getLockedBalance(address, height);
+            }
+
+            if (operation == "lock") {
+                if (args.length != 4) return ARG_ERROR;
+
+                byte[] from = (byte[]) args[0];
+                byte[] to = (byte[]) args[1];
+                BigInteger amount = (BigInteger) args[2];
+                BigInteger lockHeight = (BigInteger) args[3];
+
+                return lock(from, to, amount, lockHeight);
+            }
+
+            if (operation == "unlock") {
+                if (args.length != 2) return ARG_ERROR;
+
+                byte[] to = (byte[]) args[0];
+                BigInteger height = (BigInteger) args[1];
+                return unlock(to, height);
+            }
+
+            return RET_NO_OP;
         }
 
-        if (operation == "lock") {
-            if (args.length != 4) return ARG_ERROR;
-
-            byte[] from = (byte[]) args[0];
-            byte[] to = (byte[]) args[1];
-            BigInteger amount = (BigInteger) args[2];
-            BigInteger lockHeight = (BigInteger) args[3];
-
-            return lock(from, to, amount, lockHeight);
-        }
-
-        if (operation == "unlock") {
-            if (args.length != 2) return ARG_ERROR;
-
-            byte[] to = (byte[]) args[0];
-            BigInteger height = (BigInteger) args[1];
-            return unlock(to, height);
-        }
-
-        return RET_NO_OP;
+        return false;
     }
 }
