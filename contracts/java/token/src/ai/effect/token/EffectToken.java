@@ -5,8 +5,9 @@ import java.util.Arrays;
 
 import org.neo.smartcontract.framework.SmartContract;
 import org.neo.smartcontract.framework.Helper;
-import org.neo.smartcontract.framework.services.neo.Storage;
 import org.neo.smartcontract.framework.services.neo.Runtime;
+import org.neo.smartcontract.framework.services.neo.Storage;
+import org.neo.smartcontract.framework.services.neo.TriggerType;
 import org.neo.smartcontract.framework.services.system.ExecutionEngine;
 
 public class EffectToken extends SmartContract
@@ -182,61 +183,68 @@ public class EffectToken extends SmartContract
      * Smart contract entrypoint
      */
     public static Object Main(String operation, Object[] args) {
-        if (operation == "name") return NAME;
-        if (operation == "symbol") return SYMBOL;
-        if (operation == "totalSupply") return totalSupply();
-        if (operation == "deploy") return deploy();
-        if (operation == "decimals") return (int) DECIMALS;
+        if (Runtime.trigger() == TriggerType.Verification) {
+            return Runtime.checkWitness(getOwner());
+        } else if (Runtime.trigger() == TriggerType.Application) {
+            if (operation == "name") return NAME;
+            if (operation == "symbol") return SYMBOL;
+            if (operation == "totalSupply") return totalSupply();
+            if (operation == "deploy") return deploy();
+            if (operation == "decimals") return (int) DECIMALS;
 
-        if (operation == "balanceOf") {
-            if (args.length != 1) return ARG_ERROR;
-            byte[] account = (byte[]) args[0];
-            return getBalance(account);
+            if (operation == "balanceOf") {
+                if (args.length != 1) return ARG_ERROR;
+                byte[] account = (byte[]) args[0];
+                return getBalance(account);
+            }
+
+            if (operation == "transfer") {
+                if (args.length != 3) return ARG_ERROR;
+
+                byte[] from = (byte[]) args[0];
+                byte[] to = (byte[]) args[1];
+                BigInteger amount = (BigInteger) args[2];
+                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
+
+                return transfer(from, to, amount, caller);
+            }
+
+            if (operation == "transferFrom") {
+                if (args.length != 4) return ARG_ERROR;
+
+                byte[] originator = (byte[]) args[0];
+                byte[] from = (byte[]) args[1];
+                byte[] to = (byte[]) args[2];
+                BigInteger amount = (BigInteger) args[3];
+                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
+
+                return transferFrom(originator, from, to, amount, caller);
+            }
+
+            if (operation == "approve") {
+                if (args.length != 3) return ARG_ERROR;
+
+                byte[] owner = (byte[]) args[0];
+                byte[] spender = (byte[]) args[1];
+                BigInteger amount = (BigInteger) args[2];
+                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
+
+                return approve(owner, spender, amount, caller);
+            }
+
+            if (operation == "allowance") {
+                if (args.length != 2) return ARG_ERROR;
+
+                byte[] owner = (byte[]) args[0];
+                byte[] spender = (byte[]) args[1];
+
+                return allowance(owner, spender);
+            }
+
+            return RET_NO_OP;
         }
 
-        if (operation == "transfer") {
-            if (args.length != 3) return ARG_ERROR;
-
-            byte[] from = (byte[]) args[0];
-            byte[] to = (byte[]) args[1];
-            BigInteger amount = (BigInteger) args[2];
-            byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
-
-            return transfer(from, to, amount, caller);
-        }
-
-        if (operation == "transferFrom") {
-            if (args.length != 4) return ARG_ERROR;
-
-            byte[] originator = (byte[]) args[0];
-            byte[] from = (byte[]) args[1];
-            byte[] to = (byte[]) args[2];
-            BigInteger amount = (BigInteger) args[3];
-            byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
-
-            return transferFrom(originator, from, to, amount, caller);
-        }
-
-        if (operation == "approve") {
-            if (args.length != 3) return ARG_ERROR;
-
-            byte[] owner = (byte[]) args[0];
-            byte[] spender = (byte[]) args[1];
-            BigInteger amount = (BigInteger) args[2];
-            byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
-
-            return approve(owner, spender, amount, caller);
-        }
-
-        if (operation == "allowance") {
-            if (args.length != 2) return ARG_ERROR;
-
-            byte[] owner = (byte[]) args[0];
-            byte[] spender = (byte[]) args[1];
-
-            return allowance(owner, spender);
-        }
-
-        return RET_NO_OP;
+        // Handle direct deposit
+        return false;
     }
 }
