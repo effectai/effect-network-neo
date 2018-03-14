@@ -112,7 +112,7 @@ public class EffectToken extends SmartContract
 
         BigInteger allowanceValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), allowanceKey));
 
-        if (allowanceValue.compareTo(value) <= 0) return false;
+        if (allowanceValue.compareTo(value) < 0) return false;
 
         BigInteger fromValue = getBalance(from);
         byte[] fromKey = storageKey(PREFIX_BALANCE, from);
@@ -122,7 +122,7 @@ public class EffectToken extends SmartContract
         storageSubtractOrDelete(fromKey, fromValue, value);
 
         BigInteger toValue = getBalance(to);
-        byte[] toKey = storageKey(PREFIX_BALANCE, from);
+        byte[] toKey = storageKey(PREFIX_BALANCE, to);
         Storage.put(Storage.currentContext(), toKey, toValue.add(value));
 
         storageSubtractOrDelete(allowanceKey, allowanceValue, value);
