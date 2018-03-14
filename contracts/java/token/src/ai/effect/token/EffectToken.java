@@ -187,6 +187,7 @@ public class EffectToken extends SmartContract
         if (to.length != 20) return false;
         if (from.length != 20) return false;
         if (lockHeight.intValue() <= Blockchain.height()) return false;
+        if (!Runtime.checkWitness(from)) return false;
 
         BigInteger fromValue = getBalance(from);
         byte[] fromKey = storageKey(PREFIX_BALANCE, from);
