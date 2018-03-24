@@ -22,12 +22,39 @@ public class EffectToken extends SmartContract
     public static final String ARG_ERROR = "arguments invalid";
     public static final boolean RET_NO_OP = false;
 
+    public static final String PREFIX_APPROVE = "a";
+    public static final String PREFIX_BALANCE = "b";
     /**
      * Get the owner of the contract
      */
     public static byte[] getOwner() {
         byte[] owner = {(byte) 177, 6, 60,(byte)  194,(byte)  249,(byte)  203, 3, 47, 76,(byte)  201, 11,(byte)  213,(byte)  156,(byte)  131, 7,(byte)  197,(byte)  180,(byte)  182,(byte)  147, 37};
         return owner;
+    }
+
+    /**
+     * Generate a byte-array storage key. The prefix must be a 1-byte
+     * string used to prevent storage collisions; any additional byte
+     * arrays are concatenated.
+     */
+    public static byte[] storageKey(String prefix, byte[]... args) {
+        byte[] prefixArray = Helper.asByteArray(prefix);
+        byte[] key = Helper.concat(prefixArray, args[0]);
+        for (int i = 1; i < args.length; i++)
+            key = Helper.concat(key, args[i]);
+        return key;
+    }
+
+    /**
+     * Subtract an integer value from a storage key. If the remaining
+     * value is 0 the key is deleted.
+     */
+    public static void storageSubtractOrDelete(byte[] key, BigInteger oldValue, BigInteger subValue) {
+        if (oldValue.equals(subValue)) {
+            Storage.delete(Storage.currentContext(), key);
+        } else {
+            Storage.put(Storage.currentContext(), key, oldValue.subtract(subValue));
+        }
     }
 
     /**
@@ -41,7 +68,8 @@ public class EffectToken extends SmartContract
      * Get token balance for an address
      */
     public static BigInteger getBalance(byte[] address) {
-        return new BigInteger(Storage.get(Storage.currentContext(), address));
+        byte[] key = storageKey(PREFIX_BALANCE, address);
+        return new BigInteger(Storage.get(Storage.currentContext(), key));
     }
 
     /**
@@ -69,17 +97,15 @@ public class EffectToken extends SmartContract
         if (!checkWitness(from, caller)) return false;
 
         BigInteger fromValue = getBalance(from);
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         if (fromValue.compareTo(value) < 0) return false;
 
-        if (fromValue.equals(value)) {
-            Storage.delete(Storage.currentContext(), from);
-        } else {
-            Storage.put(Storage.currentContext(), from, fromValue.subtract(value));
-        }
+        storageSubtractOrDelete(fromKey, fromValue, value);
 
         BigInteger toValue = getBalance(to);
-        Storage.put(Storage.currentContext(), to, toValue.add(value));
+        byte[] toKey = storageKey(PREFIX_BALANCE, to);
+        Storage.put(Storage.currentContext(), toKey, toValue.add(value));
 
         Runtime.notify("transfer", from, to, value);
 
@@ -93,32 +119,26 @@ public class EffectToken extends SmartContract
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
         if (!checkWitness(originator, caller)) return false;
 
-        byte[] allowanceKey = Helper.concat(from, originator);
+        byte[] allowanceKey = storageKey(PREFIX_APPROVE, from, originator);
 
-        if (allowanceKey.length != 40) return false;
+        if (allowanceKey.length != 41) return false;
 
-        BigInteger allowanceValue = getBalance(allowanceKey);
+        BigInteger allowanceValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), allowanceKey));
 
         if (allowanceValue.compareTo(value) <= 0) return false;
 
         BigInteger fromValue = getBalance(from);
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
-        if (fromValue.compareTo(value) <= 0) return false;
+        if (fromValue.compareTo(value) < 0) return false;
 
-        if (fromValue.equals(value)) {
-            Storage.delete(Storage.currentContext(), from);
-        } else {
-            Storage.put(Storage.currentContext(), from, fromValue.subtract(value));
-        }
+        storageSubtractOrDelete(fromKey, fromValue, value);
 
         BigInteger toValue = getBalance(to);
-        Storage.put(Storage.currentContext(), to, toValue.add(value));
+        byte[] toKey = storageKey(PREFIX_BALANCE, from);
+        Storage.put(Storage.currentContext(), toKey, toValue.add(value));
 
-        if (allowanceValue.equals(value)) {
-            Storage.delete(Storage.currentContext(), allowanceKey);
-        } else {
-            Storage.put(Storage.currentContext(), allowanceKey, allowanceValue.subtract(value));
-        }
+        storageSubtractOrDelete(allowanceKey, allowanceValue, value);
 
         Runtime.notify("transfer", from, to, value);
 
@@ -138,9 +158,9 @@ public class EffectToken extends SmartContract
 
         if (ownerValue.compareTo(value) < 0) return false;
 
-        byte[] approvalKey = Helper.concat(owner, spender);
+        byte[] approvalKey = storageKey(PREFIX_APPROVE, owner, spender);
 
-        if (approvalKey.length != 40) return false;
+        if (approvalKey.length != 41) return false;
 
         Storage.put(Storage.currentContext(), approvalKey, value);
 
@@ -156,8 +176,9 @@ public class EffectToken extends SmartContract
         if (owner.length != 20) return null;
         if (spender.length != 20) return null;
 
-        byte[] allowanceKey = Helper.concat(owner, spender);
-        return getBalance(allowanceKey);
+        byte[] allowanceKey = storageKey(PREFIX_APPROVE, owner, spender);
+
+        return Helper.asBigInteger(Storage.get(Storage.currentContext(), allowanceKey));
     }
 
     /**
@@ -167,12 +188,15 @@ public class EffectToken extends SmartContract
      */
     public static boolean deploy() {
         byte[] owner = getOwner();
+
         if (!Runtime.checkWitness(owner)) return false;
 
         byte[] initialized = Storage.get(Storage.currentContext(), "initialized");
-        if (Arrays.equals(initialized, BigInteger.ZERO.toByteArray())) {
-            Storage.put(Storage.currentContext(), "initialized", BigInteger.valueOf(1));
-            Storage.put(Storage.currentContext(), owner, totalSupply());
+
+        if (initialized[0] == 0) {
+            byte[] ownerKey = storageKey(PREFIX_BALANCE, owner);
+            Storage.put(Storage.currentContext(), "initialized", BigInteger.ONE);
+            Storage.put(Storage.currentContext(), ownerKey, totalSupply());
             return true;
         }
 
@@ -194,7 +218,9 @@ public class EffectToken extends SmartContract
 
             if (operation == "balanceOf") {
                 if (args.length != 1) return ARG_ERROR;
+
                 byte[] account = (byte[]) args[0];
+
                 return getBalance(account);
             }
 

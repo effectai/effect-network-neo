@@ -20,9 +20,24 @@ public class TokenLock extends SmartContract
     public static final String RET_NO_OP = "no op";
     public static final String ARG_ERROR = "arguments invalid";
 
+    public static final String PREFIX_LOCK = "l";
+
     @Appcall(value=TOKEN_SCRIPT_HASH)
     public static Object token(String arg, Object[] args) {
         return null;
+    }
+
+    /**
+     * Generate a byte-array storage key. The prefix must be a 1-byte
+     * string used to prevent storage collisions; any additional byte
+     * arrays are concatenated.
+     */
+    public static byte[] storageKey(String prefix, byte[]... args) {
+        byte[] prefixArray = Helper.asByteArray(prefix);
+        byte[] key = Helper.concat(prefixArray, args[0]);
+        for (int i = 1; i < args.length; i++)
+            key = Helper.concat(key, args[i]);
+        return key;
     }
 
     /**
@@ -38,7 +53,8 @@ public class TokenLock extends SmartContract
     public static BigInteger getLockedBalance(byte[] address, BigInteger height) {
         if (address.length != 20) return null;
 
-        byte[] lockKey = Helper.concat(address, height.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, address, height.toByteArray());
+
         return new BigInteger(Storage.get(Storage.currentContext(), lockKey));
     }
 
@@ -60,9 +76,10 @@ public class TokenLock extends SmartContract
 
         byte[] lockAddress = getAddress();
         boolean transferred = (boolean) token("transfer", new Object[] {from, lockAddress, value});
+
         if (transferred == false) return false;
 
-        byte[] lockKey = Helper.concat(to, lockHeight.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, lockHeight.toByteArray());
         BigInteger lockValue = new BigInteger(Storage.get(Storage.currentContext(), lockKey));
 
         Storage.put(Storage.currentContext(), lockKey, lockValue.add(value));
@@ -74,17 +91,18 @@ public class TokenLock extends SmartContract
      * Unlock all tokens locked for `to` at `height`
      */
     public static boolean unlock(byte[] to, BigInteger height) {
-
         if (height.intValue() > Blockchain.height()) return false;
 
         if (to.length != 20) return false;
 
-        byte[] lockKey = Helper.concat(to, height.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, height.toByteArray());
         BigInteger value = new BigInteger(Storage.get(Storage.currentContext(), lockKey));
+
         if (value.equals(BigInteger.ZERO)) return false;
 
         byte[] lockAddress = getAddress();
         boolean transferred = (boolean) token("transfer", new Object[] {lockAddress, to, value});
+
         if (transferred == false) return false;
 
         Storage.delete(Storage.currentContext(), lockKey);
