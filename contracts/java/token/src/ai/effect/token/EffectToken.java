@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import org.neo.smartcontract.framework.SmartContract;
 import org.neo.smartcontract.framework.Helper;
+import org.neo.smartcontract.framework.services.neo.Blockchain;
 import org.neo.smartcontract.framework.services.neo.Runtime;
 import org.neo.smartcontract.framework.services.neo.Storage;
 import org.neo.smartcontract.framework.services.neo.TriggerType;
@@ -24,6 +25,8 @@ public class EffectToken extends SmartContract
 
     public static final String PREFIX_APPROVE = "a";
     public static final String PREFIX_BALANCE = "b";
+    public static final String PREFIX_LOCK = "l";
+
     /**
      * Get the owner of the contract
      */
@@ -73,28 +76,12 @@ public class EffectToken extends SmartContract
     }
 
     /**
-     * Checks if transaction is signed by `from` or if it matches the
-     * calling script.
-     */
-    private static boolean checkWitness(byte[] from, byte[] caller) {
-        if (!Runtime.checkWitness(from)) {
-            if (!Arrays.equals(from, caller)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Transfer tokens from `from` to `to`
-     *
-     * From can be a smart contract script hash, in which case it must
-     * match `caller`.
      */
-    public static boolean transfer(byte[] from, byte[] to, BigInteger value, byte[] caller) {
+    public static boolean transfer(byte[] from, byte[] to, BigInteger value) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
         if (to.length != 20) return false;
-        if (!checkWitness(from, caller)) return false;
+        if (!Runtime.checkWitness(from)) return false;
 
         BigInteger fromValue = getBalance(from);
         byte[] fromKey = storageKey(PREFIX_BALANCE, from);
@@ -115,9 +102,9 @@ public class EffectToken extends SmartContract
     /**
      * Transfer tokens on behalf of `from` to `to`, requires allowance
      */
-    public static boolean transferFrom(byte[] originator, byte[] from, byte[] to, BigInteger value, byte[] caller) {
+    public static boolean transferFrom(byte[] originator, byte[] from, byte[] to, BigInteger value) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
-        if (!checkWitness(originator, caller)) return false;
+        if (!Runtime.checkWitness(originator)) return false;
 
         byte[] allowanceKey = storageKey(PREFIX_APPROVE, from, originator);
 
@@ -125,7 +112,7 @@ public class EffectToken extends SmartContract
 
         BigInteger allowanceValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), allowanceKey));
 
-        if (allowanceValue.compareTo(value) <= 0) return false;
+        if (allowanceValue.compareTo(value) < 0) return false;
 
         BigInteger fromValue = getBalance(from);
         byte[] fromKey = storageKey(PREFIX_BALANCE, from);
@@ -135,7 +122,7 @@ public class EffectToken extends SmartContract
         storageSubtractOrDelete(fromKey, fromValue, value);
 
         BigInteger toValue = getBalance(to);
-        byte[] toKey = storageKey(PREFIX_BALANCE, from);
+        byte[] toKey = storageKey(PREFIX_BALANCE, to);
         Storage.put(Storage.currentContext(), toKey, toValue.add(value));
 
         storageSubtractOrDelete(allowanceKey, allowanceValue, value);
@@ -150,9 +137,9 @@ public class EffectToken extends SmartContract
      *
      * This overwrites the any value
      */
-    public static boolean approve(byte[] owner, byte[] spender, BigInteger value, byte[] caller) {
+    public static boolean approve(byte[] owner, byte[] spender, BigInteger value) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
-        if (!checkWitness(owner, caller)) return false;
+        if (!Runtime.checkWitness(owner)) return false;
 
         BigInteger ownerValue = getBalance(owner);
 
@@ -179,6 +166,64 @@ public class EffectToken extends SmartContract
         byte[] allowanceKey = storageKey(PREFIX_APPROVE, owner, spender);
 
         return Helper.asBigInteger(Storage.get(Storage.currentContext(), allowanceKey));
+    }
+
+    /**
+     * Get the number of tokens locked for `address` at `height`
+     */
+    public static BigInteger getLockedBalance(byte[] address, BigInteger height) {
+        if (address.length != 20) return null;
+
+        byte[] lockKey = storageKey(PREFIX_LOCK, address, height.toByteArray());
+
+        return Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
+    }
+
+    /**
+     * Send `amount` of tokens to an address that are locked until `height`
+     */
+    public static boolean lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
+        if (value.compareTo(BigInteger.ZERO) <= 0) return false;
+        if (to.length != 20) return false;
+        if (from.length != 20) return false;
+        if (lockHeight.intValue() <= Blockchain.height()) return false;
+        if (!Runtime.checkWitness(from)) return false;
+
+        BigInteger fromValue = getBalance(from);
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
+
+        if (fromValue.compareTo(value) < 0) return false;
+
+        storageSubtractOrDelete(fromKey, fromValue, value);
+
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, lockHeight.toByteArray());
+        BigInteger lockValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
+        Storage.put(Storage.currentContext(), lockKey, lockValue.add(value));
+
+        return true;
+    }
+
+    /**
+     * Unlock all tokens locked for `to` at `height`
+     */
+    public static boolean unlock(byte[] to, BigInteger height) {
+        if (height.intValue() > Blockchain.height()) return false;
+
+        if (to.length != 20) return false;
+
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, height.toByteArray());
+        BigInteger value = Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
+
+        if (value.equals(BigInteger.ZERO)) return false;
+
+        BigInteger toValue = getBalance(to);
+        byte[] toKey = storageKey(PREFIX_BALANCE, to);
+
+        Storage.put(Storage.currentContext(), toKey, toValue.add(value));
+
+        Storage.delete(Storage.currentContext(), lockKey);
+
+        return true;
     }
 
     /**
@@ -230,9 +275,8 @@ public class EffectToken extends SmartContract
                 byte[] from = (byte[]) args[0];
                 byte[] to = (byte[]) args[1];
                 BigInteger amount = (BigInteger) args[2];
-                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
 
-                return transfer(from, to, amount, caller);
+                return transfer(from, to, amount);
             }
 
             if (operation == "transferFrom") {
@@ -242,9 +286,8 @@ public class EffectToken extends SmartContract
                 byte[] from = (byte[]) args[1];
                 byte[] to = (byte[]) args[2];
                 BigInteger amount = (BigInteger) args[3];
-                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
 
-                return transferFrom(originator, from, to, amount, caller);
+                return transferFrom(originator, from, to, amount);
             }
 
             if (operation == "approve") {
@@ -253,9 +296,8 @@ public class EffectToken extends SmartContract
                 byte[] owner = (byte[]) args[0];
                 byte[] spender = (byte[]) args[1];
                 BigInteger amount = (BigInteger) args[2];
-                byte[] caller = (byte[]) ExecutionEngine.callingScriptHash();
 
-                return approve(owner, spender, amount, caller);
+                return approve(owner, spender, amount);
             }
 
             if (operation == "allowance") {
@@ -265,6 +307,35 @@ public class EffectToken extends SmartContract
                 byte[] spender = (byte[]) args[1];
 
                 return allowance(owner, spender);
+            }
+
+            if (operation == "lockedBalanceAt") {
+                if (args.length != 2) return ARG_ERROR;
+
+                byte[] address = (byte[]) args[0];
+                BigInteger height = (BigInteger) args[1];
+
+                return getLockedBalance(address, height);
+            }
+
+            if (operation == "lock") {
+                if (args.length != 4) return ARG_ERROR;
+
+                byte[] from = (byte[]) args[0];
+                byte[] to = (byte[]) args[1];
+                BigInteger amount = (BigInteger) args[2];
+                BigInteger lockHeight = (BigInteger) args[3];
+
+                return lock(from, to, amount, lockHeight);
+            }
+
+            if (operation == "unlock") {
+                if (args.length != 2) return ARG_ERROR;
+
+                byte[] to = (byte[]) args[0];
+                BigInteger height = (BigInteger) args[1];
+
+                return unlock(to, height);
             }
 
             return RET_NO_OP;
