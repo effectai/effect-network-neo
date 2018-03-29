@@ -169,24 +169,24 @@ public class EffectToken extends SmartContract
     }
 
     /**
-     * Get the number of tokens locked for `address` at `height`
+     * Get the number of tokens locked for `address` at `time`
      */
-    public static BigInteger getLockedBalance(byte[] address, BigInteger height) {
+    public static BigInteger getLockedBalance(byte[] address, BigInteger time) {
         if (address.length != 20) return null;
 
-        byte[] lockKey = storageKey(PREFIX_LOCK, address, height.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, address, time.toByteArray());
 
         return Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
     }
 
     /**
-     * Send `amount` of tokens to an address that are locked until `height`
+     * Send `amount` of tokens to an address that are locked until `time`
      */
-    public static boolean lock(byte[] from, byte[] to, BigInteger value, BigInteger lockHeight) {
+    public static boolean lock(byte[] from, byte[] to, BigInteger value, BigInteger lockTime) {
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
         if (to.length != 20) return false;
         if (from.length != 20) return false;
-        if (lockHeight.intValue() <= Blockchain.height()) return false;
+        if (lockTime.longValue() <= Runtime.time()) return false;
         if (!Runtime.checkWitness(from)) return false;
 
         BigInteger fromValue = getBalance(from);
@@ -196,7 +196,7 @@ public class EffectToken extends SmartContract
 
         storageSubtractOrDelete(fromKey, fromValue, value);
 
-        byte[] lockKey = storageKey(PREFIX_LOCK, to, lockHeight.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, lockTime.toByteArray());
         BigInteger lockValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
         Storage.put(Storage.currentContext(), lockKey, lockValue.add(value));
 
@@ -204,14 +204,13 @@ public class EffectToken extends SmartContract
     }
 
     /**
-     * Unlock all tokens locked for `to` at `height`
+     * Unlock all tokens locked for `to` at `time`
      */
-    public static boolean unlock(byte[] to, BigInteger height) {
-        if (height.intValue() > Blockchain.height()) return false;
-
+    public static boolean unlock(byte[] to, BigInteger time) {
+        if (time.longValue() > Runtime.time()) return false;
         if (to.length != 20) return false;
 
-        byte[] lockKey = storageKey(PREFIX_LOCK, to, height.toByteArray());
+        byte[] lockKey = storageKey(PREFIX_LOCK, to, time.toByteArray());
         BigInteger value = Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
 
         if (value.equals(BigInteger.ZERO)) return false;
@@ -313,9 +312,9 @@ public class EffectToken extends SmartContract
                 if (args.length != 2) return ARG_ERROR;
 
                 byte[] address = (byte[]) args[0];
-                BigInteger height = (BigInteger) args[1];
+                BigInteger time = (BigInteger) args[1];
 
-                return getLockedBalance(address, height);
+                return getLockedBalance(address, time);
             }
 
             if (operation == "lock") {
@@ -324,18 +323,18 @@ public class EffectToken extends SmartContract
                 byte[] from = (byte[]) args[0];
                 byte[] to = (byte[]) args[1];
                 BigInteger amount = (BigInteger) args[2];
-                BigInteger lockHeight = (BigInteger) args[3];
+                BigInteger lockTime = (BigInteger) args[3];
 
-                return lock(from, to, amount, lockHeight);
+                return lock(from, to, amount, lockTime);
             }
 
             if (operation == "unlock") {
                 if (args.length != 2) return ARG_ERROR;
 
                 byte[] to = (byte[]) args[0];
-                BigInteger height = (BigInteger) args[1];
+                BigInteger time = (BigInteger) args[1];
 
-                return unlock(to, height);
+                return unlock(to, time);
             }
 
             return RET_NO_OP;
