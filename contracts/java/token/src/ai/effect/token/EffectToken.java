@@ -55,6 +55,7 @@ public class EffectToken extends SmartContract
     public static void storageSubtractOrDelete(byte[] key, BigInteger oldValue, BigInteger subValue) {
         if (oldValue.equals(subValue)) {
             Storage.delete(Storage.currentContext(), key);
+            return;
         } else {
             Storage.put(Storage.currentContext(), key, oldValue.subtract(subValue));
         }
