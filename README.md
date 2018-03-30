@@ -1,11 +1,14 @@
-# Effect Network
+<p align="center"><img src="logo.png" width="96px"></p>
 
-This project contains smart contracts for the Effect Network.
+<h1 align="center">Effect Network</h1>
+
+<p align="center">Smart contracts for the Effect Network</p>
 
 ## Compiling
 
-The main token contracts are implemented in Java, but future smart
-contracts might be developed in Python.
+The main token contracts are currently implemented in Java. Maven is
+used to compile the contract into a jar file that is then converted to
+avm bytecode.
 
 ### Java
 
@@ -27,13 +30,14 @@ $ cd contracts/java/token
 $ mvn package
 ```
 
-Insert the resulting `jar` file to the lastest version of `neoj` to
-get the resulting `avm` file.
+This will create a `jar` file in the `target` directory. This file can
+be used as input to
+[neoj](https://github.com/neo-project/neo-compiler/tree/master/neoj)
+to get the a resulting `avm` file that can be deployed.
 
 ## Contracts
 
-The following contracts are included:
+The following contracts are included
 
 - [EffectToken](contracts/java/token)
-- [TokenLock](contracts/java/token-lock)
 
