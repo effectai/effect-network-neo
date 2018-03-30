@@ -1,4 +1,4 @@
-<p align="center"><img src="effect-logo.png" width="96px"></p>
+<p align="center"><img src="logo.png" width="96px"></p>
 
 <h1 align="center">Effect Network</h1>
 
