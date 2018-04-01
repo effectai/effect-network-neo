@@ -11,37 +11,37 @@ The smart contract has been fully audited by [Red4Sec](https://www.red4sec.com/e
 
 ### NEP5
 
-====`totalSupply`====
+#### `totalSupply`
 
-====`name`====
+#### `name`
  
-====`symbol`====
+#### `symbol`
 
-====`decimals`====
+#### `decimals`
 
-====`balanceOf`====
+#### `balanceOf`
 
-====`transfer`====
+#### `transfer`
 
-====`allowance`====
+#### `allowance`
 
-====`transferFrom`====
+#### `transferFrom`
 
-====`approve`====
+#### `approve`
 
 ### Token Lock
 
 Locked tokens can not be traded and are not counted in a users balance.
 
-====`lockedBalanceAt`==== 
+#### `lockedBalanceAt`
 
 Get the number of tokens locked for an address at a timestamp.
 
-====`lock`====
+#### `lock`
 
 Lock an amount tokens from an address until a certain timestamp and
 specify the address that will receive the tokens after unlock.
 
-====`unlock`====
+#### `unlock`
 
 Send all tokens locked at timestamp to the unlock address
