@@ -201,6 +201,8 @@ public class EffectToken extends SmartContract
         BigInteger lockValue = Helper.asBigInteger(Storage.get(Storage.currentContext(), lockKey));
         Storage.put(Storage.currentContext(), lockKey, lockValue.add(value));
 
+        Runtime.notify("lock", from, to, value, lockTime);
+
         return true;
     }
 
@@ -222,6 +224,8 @@ public class EffectToken extends SmartContract
         Storage.put(Storage.currentContext(), toKey, toValue.add(value));
 
         Storage.delete(Storage.currentContext(), lockKey);
+
+        Runtime.notify("unlock", to, value, time);
 
         return true;
     }
