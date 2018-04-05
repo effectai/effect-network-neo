@@ -20,8 +20,7 @@ public class EffectToken extends SmartContract
     public static final long NUM_TOKENS = 650000000;   // total number of tokens
     public static final long FACTOR = 100000000;       // decided by DECIMALS
 
-    public static final String ARG_ERROR = "arguments invalid";
-    public static final boolean RET_NO_OP = false;
+    public static final boolean ARG_ERROR = false;
 
     public static final String PREFIX_APPROVE = "a";
     public static final String PREFIX_BALANCE = "b";
@@ -342,7 +341,7 @@ public class EffectToken extends SmartContract
                 return unlock(to, time);
             }
 
-            return RET_NO_OP;
+            return ARG_ERROR;
         }
 
         // Handle direct deposit
