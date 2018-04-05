@@ -258,13 +258,13 @@ public class EffectToken extends SmartContract
         if (Runtime.trigger() == TriggerType.Verification) {
             return Runtime.checkWitness(getOwner());
         } else if (Runtime.trigger() == TriggerType.Application) {
-            if (operation == "name") return NAME;
-            if (operation == "symbol") return SYMBOL;
-            if (operation == "totalSupply") return totalSupply();
-            if (operation == "deploy") return deploy();
-            if (operation == "decimals") return (int) DECIMALS;
+            if (operation.equals("name")) return NAME;
+            if (operation.equals("symbol")) return SYMBOL;
+            if (operation.equals("totalSupply")) return totalSupply();
+            if (operation.equals("deploy")) return deploy();
+            if (operation.equals("decimals")) return (int) DECIMALS;
 
-            if (operation == "balanceOf") {
+            if (operation.equals("balanceOf")) {
                 if (args.length != 1) return ARG_ERROR;
 
                 byte[] account = (byte[]) args[0];
@@ -272,7 +272,7 @@ public class EffectToken extends SmartContract
                 return getBalance(account);
             }
 
-            if (operation == "transfer") {
+            if (operation.equals("transfer")) {
                 if (args.length != 3) return ARG_ERROR;
 
                 byte[] from = (byte[]) args[0];
@@ -282,7 +282,7 @@ public class EffectToken extends SmartContract
                 return transfer(from, to, amount);
             }
 
-            if (operation == "transferFrom") {
+            if (operation.equals("transferFrom")) {
                 if (args.length != 4) return ARG_ERROR;
 
                 byte[] originator = (byte[]) args[0];
@@ -293,7 +293,7 @@ public class EffectToken extends SmartContract
                 return transferFrom(originator, from, to, amount);
             }
 
-            if (operation == "approve") {
+            if (operation.equals("approve")) {
                 if (args.length != 3) return ARG_ERROR;
 
                 byte[] owner = (byte[]) args[0];
@@ -303,7 +303,7 @@ public class EffectToken extends SmartContract
                 return approve(owner, spender, amount);
             }
 
-            if (operation == "allowance") {
+            if (operation.equals("allowance")) {
                 if (args.length != 2) return ARG_ERROR;
 
                 byte[] owner = (byte[]) args[0];
@@ -312,7 +312,7 @@ public class EffectToken extends SmartContract
                 return allowance(owner, spender);
             }
 
-            if (operation == "lockedBalanceAt") {
+            if (operation.equals("lockedBalanceAt")) {
                 if (args.length != 2) return ARG_ERROR;
 
                 byte[] address = (byte[]) args[0];
@@ -321,7 +321,7 @@ public class EffectToken extends SmartContract
                 return getLockedBalance(address, time);
             }
 
-            if (operation == "lock") {
+            if (operation.equals("lock")) {
                 if (args.length != 4) return ARG_ERROR;
 
                 byte[] from = (byte[]) args[0];
@@ -332,7 +332,7 @@ public class EffectToken extends SmartContract
                 return lock(from, to, amount, lockTime);
             }
 
-            if (operation == "unlock") {
+            if (operation.equals("unlock")) {
                 if (args.length != 2) return ARG_ERROR;
 
                 byte[] to = (byte[]) args[0];
