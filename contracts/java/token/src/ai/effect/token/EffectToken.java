@@ -84,9 +84,10 @@ public class EffectToken extends SmartContract
         if (!Runtime.checkWitness(from)) return false;
 
         BigInteger fromValue = getBalance(from);
-        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         if (fromValue.compareTo(value) < 0) return false;
+
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         storageSubtractOrDelete(fromKey, fromValue, value);
 
@@ -115,9 +116,10 @@ public class EffectToken extends SmartContract
         if (allowanceValue.compareTo(value) < 0) return false;
 
         BigInteger fromValue = getBalance(from);
-        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         if (fromValue.compareTo(value) < 0) return false;
+
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         storageSubtractOrDelete(fromKey, fromValue, value);
 
@@ -186,9 +188,10 @@ public class EffectToken extends SmartContract
         if (!Runtime.checkWitness(from)) return false;
 
         BigInteger fromValue = getBalance(from);
-        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         if (fromValue.compareTo(value) < 0) return false;
+
+        byte[] fromKey = storageKey(PREFIX_BALANCE, from);
 
         storageSubtractOrDelete(fromKey, fromValue, value);
 
