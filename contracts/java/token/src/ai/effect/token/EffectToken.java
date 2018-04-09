@@ -141,10 +141,6 @@ public class EffectToken extends SmartContract
         if (value.compareTo(BigInteger.ZERO) <= 0) return false;
         if (!Runtime.checkWitness(owner)) return false;
 
-        BigInteger ownerValue = getBalance(owner);
-
-        if (ownerValue.compareTo(value) < 0) return false;
-
         byte[] approvalKey = storageKey(PREFIX_APPROVE, owner, spender);
 
         if (approvalKey.length != 41) return false;
