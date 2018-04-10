@@ -30,7 +30,7 @@ public class EffectToken extends SmartContract
      * Get the owner of the contract
      */
     public static byte[] getOwner() {
-        byte[] owner = {(byte) 177, 6, 60,(byte)  194,(byte)  249,(byte)  203, 3, 47, 76,(byte)  201, 11,(byte)  213,(byte)  156,(byte)  131, 7,(byte)  197,(byte)  180,(byte)  182,(byte)  147, 37};
+	byte[] owner = {(byte) 171, (byte) 181, 96, (byte) 159, (byte) 118, 89, (byte) 159, (byte) 144, (byte) 188, 17, 72, 90, 94, (byte) 204, (byte) 180, 28, (byte) 228, 105, 74, (byte) 236};
         return owner;
     }
 
